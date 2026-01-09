@@ -78,7 +78,6 @@ func main() {
 	if dur > 0 {
 		fmt.Fprintf(&b, " · %s", fmtDur(dur))
 	}
-	fmt.Fprintf(&b, " · %s", time.Now().Format("15:04"))
 
 	body, _ := json.Marshal(map[string]string{"chat_id": cfg.ChatID, "text": b.String(), "parse_mode": "HTML"})
 	http.Post("https://api.telegram.org/bot"+cfg.Token+"/sendMessage", "application/json", bytes.NewReader(body))
