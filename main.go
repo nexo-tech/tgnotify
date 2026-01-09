@@ -3,10 +3,37 @@ package main
 import (
 	"fmt"
 	"io"
+	"math/rand"
 	"os"
 	"strings"
 	"time"
 )
+
+var doneHeaders = []string{
+	"｡✧ <b>done!</b> ✧｡",
+	"✿ <b>finished~</b> ✿",
+	"♪ <b>complete!</b> ♪",
+	"☆ <b>all done!</b> ☆",
+	"･ﾟ✧ <b>yay!</b> ✧ﾟ･",
+	"♡ <b>done!</b> ♡",
+	"⋆ <b>finished!</b> ⋆",
+	"｡ﾟ☆ <b>complete~</b> ☆ﾟ｡",
+}
+
+var needHeaders = []string{
+	"｡･ﾟ <b>need you~</b> ﾟ･｡",
+	"✿ <b>waiting...</b> ✿",
+	"♪ <b>hey~</b> ♪",
+	"☆ <b>psst!</b> ☆",
+	"･ﾟ✧ <b>help?</b> ✧ﾟ･",
+	"♡ <b>um...</b> ♡",
+	"⋆ <b>need input~</b> ⋆",
+	"｡ﾟ☆ <b>hello?</b> ☆ﾟ｡",
+}
+
+func pick(choices []string) string {
+	return choices[rand.Intn(len(choices))]
+}
 
 func main() {
 	if err := run(); err != nil {
@@ -51,9 +78,9 @@ func formatMessage(p *HookPayload) string {
 	// Header
 	switch p.HookEventName {
 	case "Stop":
-		b.WriteString("｡✧ <b>done!</b> ✧｡\n\n")
+		b.WriteString(pick(doneHeaders) + "\n\n")
 	case "Notification":
-		b.WriteString("｡･ﾟ <b>need you~</b> ﾟ･｡\n\n")
+		b.WriteString(pick(needHeaders) + "\n\n")
 	default:
 		b.WriteString(fmt.Sprintf("✿ <b>%s</b> ✿\n\n", strings.ToLower(p.HookEventName)))
 	}
