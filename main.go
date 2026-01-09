@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"math/rand"
 	"net/http"
 	"os"
@@ -18,28 +17,9 @@ import (
 )
 
 var (
-	doneHeaders = []string{
-		"｡✧ <b>done!</b> ✧｡", "✿ <b>finished~</b> ✿", "♪ <b>complete!</b> ♪",
-		"☆ <b>all done!</b> ☆", "･ﾟ✧ <b>yay!</b> ✧ﾟ･", "♡ <b>done!</b> ♡",
-	}
-	needHeaders = []string{
-		"｡･ﾟ <b>need you~</b> ﾟ･｡", "✿ <b>waiting...</b> ✿", "♪ <b>hey~</b> ♪",
-		"☆ <b>psst!</b> ☆", "･ﾟ✧ <b>help?</b> ✧ﾟ･", "♡ <b>um...</b> ♡",
-	}
+	doneHeaders = []string{"｡✧ <b>done!</b> ✧｡", "✿ <b>finished~</b> ✿", "♪ <b>complete!</b> ♪", "☆ <b>all done!</b> ☆", "･ﾟ✧ <b>yay!</b> ✧ﾟ･", "♡ <b>done!</b> ♡"}
+	needHeaders = []string{"｡･ﾟ <b>need you~</b> ﾟ･｡", "✿ <b>waiting...</b> ✿", "♪ <b>hey~</b> ♪", "☆ <b>psst!</b> ☆", "･ﾟ✧ <b>help?</b> ✧ﾟ･", "♡ <b>um...</b> ♡"}
 )
-
-type Config struct {
-	BotToken string `toml:"bot_token"`
-	ChatID   string `toml:"chat_id"`
-}
-
-type Hook struct {
-	SessionID      string `json:"session_id"`
-	TranscriptPath string `json:"transcript_path"`
-	Cwd            string `json:"cwd"`
-	Event          string `json:"hook_event_name"`
-	Message        string `json:"message"`
-}
 
 func main() {
 	path := os.Getenv("TGNOTIFY_CONFIG")
@@ -48,121 +28,109 @@ func main() {
 		path = filepath.Join(home, ".tgnotify.toml")
 	}
 
-	var cfg Config
-	if _, err := toml.DecodeFile(path, &cfg); err != nil {
-		return // silent exit if no config
+	var cfg struct {
+		Token  string `toml:"bot_token"`
+		ChatID string `toml:"chat_id"`
 	}
-
-	input, _ := io.ReadAll(os.Stdin)
-	var hook Hook
-	if json.Unmarshal(input, &hook) != nil {
+	if _, err := toml.DecodeFile(path, &cfg); err != nil {
 		return
 	}
 
-	msg := formatMsg(&hook)
-	send(cfg.BotToken, cfg.ChatID, msg)
-}
-
-func formatMsg(h *Hook) string {
-	var b strings.Builder
-	cwd, _ := os.Getwd()
-	user, _ := user.Current()
-	host, _ := os.Hostname()
-
-	// Header
-	switch h.Event {
-	case "Stop":
-		b.WriteString(doneHeaders[rand.Intn(len(doneHeaders))] + "\n\n")
-	case "Notification":
-		b.WriteString(needHeaders[rand.Intn(len(needHeaders))] + "\n\n")
-	default:
-		fmt.Fprintf(&b, "✿ <b>%s</b> ✿\n\n", strings.ToLower(h.Event))
+	var h struct {
+		TranscriptPath string `json:"transcript_path"`
+		Cwd            string `json:"cwd"`
+		Event          string `json:"hook_event_name"`
+		Message        string `json:"message"`
+	}
+	if json.NewDecoder(os.Stdin).Decode(&h) != nil {
+		return
 	}
 
-	// Project & message
-	fmt.Fprintf(&b, "<b>%s</b>\n", filepath.Base(h.Cwd))
+	var b strings.Builder
+	u, _ := user.Current()
+	cwd, _ := os.Getwd()
+	host, _ := os.Hostname()
+
+	switch h.Event {
+	case "Stop":
+		b.WriteString(doneHeaders[rand.Intn(len(doneHeaders))])
+	case "Notification":
+		b.WriteString(needHeaders[rand.Intn(len(needHeaders))])
+	default:
+		fmt.Fprintf(&b, "✿ <b>%s</b> ✿", strings.ToLower(h.Event))
+	}
+
+	fmt.Fprintf(&b, "\n\n<b>%s</b>\n", filepath.Base(h.Cwd))
+
 	if h.Event == "Notification" && h.Message != "" {
 		fmt.Fprintf(&b, "<i>%s</i>\n", h.Message)
 	}
+
+	var dur time.Duration
 	if h.Event == "Stop" {
-		if msg, dur := readTranscript(h.TranscriptPath); msg != "" {
+		if msg, d := readTranscript(h.TranscriptPath); msg != "" {
 			fmt.Fprintf(&b, "<i>%s</i>\n", msg)
-			if dur > 0 {
-				b.WriteString("\n<code>" + cwd + "</code>\n")
-				fmt.Fprintf(&b, "<code>%s@%s</code> · %s · %s", user.Username, host, fmtDur(dur), time.Now().Format("15:04"))
-				return b.String()
-			}
+			dur = d
 		}
 	}
 
-	b.WriteString("\n<code>" + cwd + "</code>\n")
-	fmt.Fprintf(&b, "<code>%s@%s</code> · %s", user.Username, host, time.Now().Format("15:04"))
-	return b.String()
+	fmt.Fprintf(&b, "\n<code>%s</code>\n<code>%s@%s</code>", cwd, u.Username, host)
+	if dur > 0 {
+		fmt.Fprintf(&b, " · %s", fmtDur(dur))
+	}
+	fmt.Fprintf(&b, " · %s", time.Now().Format("15:04"))
+
+	body, _ := json.Marshal(map[string]string{"chat_id": cfg.ChatID, "text": b.String(), "parse_mode": "HTML"})
+	http.Post("https://api.telegram.org/bot"+cfg.Token+"/sendMessage", "application/json", bytes.NewReader(body))
 }
 
-func readTranscript(path string) (lastMsg string, duration time.Duration) {
-	if path == "" {
-		return
-	}
+func readTranscript(path string) (string, time.Duration) {
 	f, err := os.Open(path)
 	if err != nil {
-		return
+		return "", 0
 	}
 	defer f.Close()
 
+	var msg string
 	var first, last time.Time
-	scanner := bufio.NewScanner(f)
-	scanner.Buffer(make([]byte, 0, 64*1024), 1024*1024)
+	sc := bufio.NewScanner(f)
+	sc.Buffer(make([]byte, 64*1024), 1024*1024)
 
-	for scanner.Scan() {
+	for sc.Scan() {
 		var e struct {
-			Type      string    `json:"type"`
-			Timestamp time.Time `json:"timestamp"`
-			Message   struct {
-				Content any `json:"content"`
-			} `json:"message"`
+			Type    string    `json:"type"`
+			Time    time.Time `json:"timestamp"`
+			Message struct{ Content any } `json:"message"`
 		}
-		if json.Unmarshal(scanner.Bytes(), &e) != nil {
+		if json.Unmarshal(sc.Bytes(), &e) != nil {
 			continue
 		}
-		if first.IsZero() && !e.Timestamp.IsZero() {
-			first = e.Timestamp
-		}
-		if !e.Timestamp.IsZero() {
-			last = e.Timestamp
+		if !e.Time.IsZero() {
+			if first.IsZero() {
+				first = e.Time
+			}
+			last = e.Time
 		}
 		if e.Type == "user" {
-			lastMsg = extractText(e.Message.Content)
-		}
-	}
-	if !first.IsZero() && !last.IsZero() {
-		duration = last.Sub(first)
-	}
-	return
-}
-
-func extractText(c any) string {
-	switch v := c.(type) {
-	case string:
-		return trunc(v)
-	case []any:
-		for _, item := range v {
-			if m, ok := item.(map[string]any); ok && m["type"] == "text" {
-				if t, ok := m["text"].(string); ok {
-					return trunc(t)
+			if s, ok := e.Message.Content.(string); ok {
+				msg = s
+			} else if arr, ok := e.Message.Content.([]any); ok {
+				for _, item := range arr {
+					if m, ok := item.(map[string]any); ok && m["type"] == "text" {
+						if t, ok := m["text"].(string); ok {
+							msg = t
+						}
+					}
 				}
 			}
 		}
 	}
-	return ""
-}
 
-func trunc(s string) string {
-	s = strings.TrimSpace(strings.ReplaceAll(s, "\n", " "))
-	if len(s) > 100 {
-		return s[:100] + "..."
+	msg = strings.TrimSpace(strings.ReplaceAll(msg, "\n", " "))
+	if len(msg) > 100 {
+		msg = msg[:100] + "..."
 	}
-	return s
+	return msg, last.Sub(first)
 }
 
 func fmtDur(d time.Duration) string {
@@ -174,9 +142,4 @@ func fmtDur(d time.Duration) string {
 		return fmt.Sprintf("%dm%ds", m, (d%time.Minute)/time.Second)
 	}
 	return fmt.Sprintf("%ds", d/time.Second)
-}
-
-func send(token, chatID, text string) {
-	body, _ := json.Marshal(map[string]string{"chat_id": chatID, "text": text, "parse_mode": "HTML"})
-	http.Post("https://api.telegram.org/bot"+token+"/sendMessage", "application/json", bytes.NewReader(body))
 }
