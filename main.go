@@ -45,7 +45,7 @@ func main() {
 func run() error {
 	cfg, err := LoadConfig()
 	if err != nil {
-		return err
+		return nil // silently exit if no config
 	}
 
 	input, err := io.ReadAll(os.Stdin)
