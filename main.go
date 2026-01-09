@@ -46,52 +46,41 @@ func formatMessage(p *HookPayload) string {
 	sys := GetSystemInfo()
 	ctx := p.GetTranscriptContext()
 	now := time.Now()
+	cwd, _ := os.Getwd()
 
 	// Header
 	switch p.HookEventName {
 	case "Stop":
-		b.WriteString("✅✅✅ <b>TASK COMPLETED</b> ✅✅✅\n\n")
+		b.WriteString("｡✧ <b>done!</b> ✧｡\n\n")
 	case "Notification":
-		b.WriteString("⏳⏳⏳ <b>AWAITING INPUT</b> ⏳⏳⏳\n\n")
+		b.WriteString("｡･ﾟ <b>need you~</b> ﾟ･｡\n\n")
 	default:
-		b.WriteString(fmt.Sprintf("🔔🔔🔔 <b>%s</b> 🔔🔔🔔\n\n", strings.ToUpper(p.HookEventName)))
+		b.WriteString(fmt.Sprintf("✿ <b>%s</b> ✿\n\n", strings.ToLower(p.HookEventName)))
 	}
 
 	// Project
-	b.WriteString(fmt.Sprintf("📦 <b>%s</b>\n\n", p.ProjectName()))
+	b.WriteString(fmt.Sprintf("<b>%s</b>\n", p.ProjectName()))
 
-	// Task description for notifications
+	// Task description
 	if p.HookEventName == "Notification" && p.Message != "" {
-		b.WriteString(fmt.Sprintf("💬 <i>%s</i>\n\n", p.Message))
+		b.WriteString(fmt.Sprintf("<i>%s</i>\n", p.Message))
 	}
 
-	// Last user message for completed tasks
 	if p.HookEventName == "Stop" && ctx != nil && ctx.LastUserMessage != "" {
-		b.WriteString(fmt.Sprintf("💬 <i>\"%s\"</i>\n\n", ctx.LastUserMessage))
+		b.WriteString(fmt.Sprintf("<i>%s</i>\n", ctx.LastUserMessage))
 	}
 
-	// Metadata
-	b.WriteString("📂 <code>" + p.Cwd + "</code>\n")
+	b.WriteString("\n")
 
-	if sys.Username != "" && sys.Hostname != "" {
-		b.WriteString(fmt.Sprintf("👤 <code>%s@%s</code>\n", sys.Username, sys.Hostname))
-	}
-
-	if p.SessionID != "" {
-		sid := p.SessionID
-		if len(sid) > 8 {
-			sid = sid[:8]
-		}
-		b.WriteString(fmt.Sprintf("🔑 <code>%s</code>\n", sid))
-	}
+	// Metadata - minimal
+	b.WriteString(fmt.Sprintf("<code>%s</code>\n", cwd))
+	b.WriteString(fmt.Sprintf("<code>%s@%s</code>", sys.Username, sys.Hostname))
 
 	if ctx != nil && ctx.SessionDuration > 0 {
-		b.WriteString(fmt.Sprintf("⏱️ <code>%s</code>\n", formatDuration(ctx.SessionDuration)))
+		b.WriteString(fmt.Sprintf(" · %s", formatDuration(ctx.SessionDuration)))
 	}
 
-	b.WriteString(fmt.Sprintf("🕐 <code>%s</code>\n", now.Format("15:04:05")))
-
-	b.WriteString("\n🤖🤖🤖🤖🤖🤖🤖🤖🤖🤖")
+	b.WriteString(fmt.Sprintf(" · %s", now.Format("15:04")))
 
 	return b.String()
 }

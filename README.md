@@ -97,35 +97,24 @@ Add to `~/.claude/settings.json`:
 
 **Task Completed:**
 ```
-✅✅✅ TASK COMPLETED ✅✅✅
+｡✧ done! ✧｡
 
-📦 my-project
+my-project
+implement user authentication
 
-💬 "implement user authentication"
-
-📂 /Users/me/projects/my-project
-👤 me@macbook
-🔑 abc12345
-⏱️ 5m 32s
-🕐 14:32:07
-
-🤖🤖🤖🤖🤖🤖🤖🤖🤖🤖
+/Users/me/projects/my-project
+me@macbook · 5m 32s · 14:32
 ```
 
 **Awaiting Input:**
 ```
-⏳⏳⏳ AWAITING INPUT ⏳⏳⏳
+｡･ﾟ need you~ ﾟ･｡
 
-📦 my-project
+my-project
+permission needed for: git push
 
-💬 Claude needs permission to run: npm install
-
-📂 /Users/me/projects/my-project
-👤 me@macbook
-🔑 xyz98765
-🕐 14:35:22
-
-🤖🤖🤖🤖🤖🤖🤖🤖🤖🤖
+/Users/me/projects/my-project
+me@macbook · 14:35
 ```
 
 ## License
