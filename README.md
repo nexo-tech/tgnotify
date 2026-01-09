@@ -55,17 +55,11 @@ go build -o tgnotify
 
 ### 3. Configure tgnotify
 
-Create `~/.tg-notify/config.toml`:
+Create `~/.tgnotify.toml`:
 
 ```toml
 bot_token = "123456789:ABCdefGHIjklMNOpqrsTUVwxyz"
 chat_id = "987654321"
-```
-
-Or set custom config path via environment variable:
-
-```bash
-export TGNOTIFY_CONFIG=/path/to/config.toml
 ```
 
 ### 4. Add Claude Code Hooks
@@ -103,21 +97,22 @@ Add to `~/.claude/settings.json`:
 
 **Task Completed:**
 ```
-✅ Claude Code Completed
+✅ Task Completed
 
-📁 my-project
-📂 /Users/me/code/my-project
-💬 "implement user authentication"
-⏱️ Session: 5m 32s
+my-project
+
+implement user authentication
+
+⏱ 5m 32s
 ```
 
-**Needs Attention:**
+**Waiting for Input:**
 ```
-⚠️ Claude Code Needs Attention
+⏳ Waiting for Input
 
-📁 my-project
-📂 /Users/me/code/my-project
-🔔 Claude needs your permission to use Bash
+my-project
+
+Claude needs permission to run Bash command
 ```
 
 ## License

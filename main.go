@@ -46,27 +46,26 @@ func formatMessage(p *HookPayload) string {
 
 	switch p.HookEventName {
 	case "Stop":
-		b.WriteString("✅ Claude Code Completed\n\n")
+		b.WriteString("✅ <b>Task Completed</b>\n\n")
 	case "Notification":
-		b.WriteString("⚠️ Claude Code Needs Attention\n\n")
+		b.WriteString("⏳ <b>Waiting for Input</b>\n\n")
 	default:
-		b.WriteString(fmt.Sprintf("🔔 Claude Code: %s\n\n", p.HookEventName))
+		b.WriteString(fmt.Sprintf("🔔 <b>%s</b>\n\n", p.HookEventName))
 	}
 
-	b.WriteString(fmt.Sprintf("📁 %s\n", p.ProjectName()))
-	b.WriteString(fmt.Sprintf("📂 %s\n", p.Cwd))
+	b.WriteString(fmt.Sprintf("<code>%s</code>\n", p.ProjectName()))
 
 	if p.HookEventName == "Notification" && p.Message != "" {
-		b.WriteString(fmt.Sprintf("🔔 %s\n", p.Message))
+		b.WriteString(fmt.Sprintf("\n%s", p.Message))
 	}
 
 	if p.HookEventName == "Stop" {
 		if ctx := p.GetTranscriptContext(); ctx != nil {
 			if ctx.LastUserMessage != "" {
-				b.WriteString(fmt.Sprintf("💬 \"%s\"\n", ctx.LastUserMessage))
+				b.WriteString(fmt.Sprintf("\n<i>%s</i>", ctx.LastUserMessage))
 			}
 			if ctx.SessionDuration > 0 {
-				b.WriteString(fmt.Sprintf("⏱️ Session: %s\n", formatDuration(ctx.SessionDuration)))
+				b.WriteString(fmt.Sprintf("\n\n⏱ %s", formatDuration(ctx.SessionDuration)))
 			}
 		}
 	}

@@ -26,8 +26,9 @@ func (t *TelegramClient) SendMessage(text string) error {
 	url := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", t.BotToken)
 
 	payload := map[string]string{
-		"chat_id": t.ChatID,
-		"text":    text,
+		"chat_id":    t.ChatID,
+		"text":       text,
+		"parse_mode": "HTML",
 	}
 
 	body, err := json.Marshal(payload)

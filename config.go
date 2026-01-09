@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 
@@ -16,24 +15,13 @@ type Config struct {
 func LoadConfig() (*Config, error) {
 	path := os.Getenv("TGNOTIFY_CONFIG")
 	if path == "" {
-		home, err := os.UserHomeDir()
-		if err != nil {
-			return nil, fmt.Errorf("get home dir: %w", err)
-		}
-		path = filepath.Join(home, ".tg-notify", "config.toml")
+		home, _ := os.UserHomeDir()
+		path = filepath.Join(home, ".tgnotify.toml")
 	}
 
 	var cfg Config
 	if _, err := toml.DecodeFile(path, &cfg); err != nil {
-		return nil, fmt.Errorf("decode config %s: %w", path, err)
+		return nil, err
 	}
-
-	if cfg.BotToken == "" {
-		return nil, fmt.Errorf("bot_token is required in %s", path)
-	}
-	if cfg.ChatID == "" {
-		return nil, fmt.Errorf("chat_id is required in %s", path)
-	}
-
 	return &cfg, nil
 }
