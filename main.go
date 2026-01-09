@@ -43,32 +43,68 @@ func run() error {
 
 func formatMessage(p *HookPayload) string {
 	var b strings.Builder
+	sys := GetSystemInfo()
+	ctx := p.GetTranscriptContext()
+	now := time.Now()
 
+	// Header
 	switch p.HookEventName {
 	case "Stop":
-		b.WriteString("✅ <b>Task Completed</b>\n\n")
+		b.WriteString("━━━━━━━━━━━━━━━━━━━━━━\n")
+		b.WriteString("✅  <b>TASK COMPLETED</b>\n")
+		b.WriteString("━━━━━━━━━━━━━━━━━━━━━━\n\n")
 	case "Notification":
-		b.WriteString("⏳ <b>Waiting for Input</b>\n\n")
+		b.WriteString("━━━━━━━━━━━━━━━━━━━━━━\n")
+		b.WriteString("⏳  <b>AWAITING INPUT</b>\n")
+		b.WriteString("━━━━━━━━━━━━━━━━━━━━━━\n\n")
 	default:
-		b.WriteString(fmt.Sprintf("🔔 <b>%s</b>\n\n", p.HookEventName))
+		b.WriteString("━━━━━━━━━━━━━━━━━━━━━━\n")
+		b.WriteString(fmt.Sprintf("🔔  <b>%s</b>\n", strings.ToUpper(p.HookEventName)))
+		b.WriteString("━━━━━━━━━━━━━━━━━━━━━━\n\n")
 	}
 
-	b.WriteString(fmt.Sprintf("<code>%s</code>\n", p.ProjectName()))
+	// Project
+	b.WriteString(fmt.Sprintf("📁  <b>%s</b>\n\n", p.ProjectName()))
 
+	// Task description for notifications
 	if p.HookEventName == "Notification" && p.Message != "" {
-		b.WriteString(fmt.Sprintf("\n%s", p.Message))
+		b.WriteString(fmt.Sprintf("💬  <i>%s</i>\n\n", p.Message))
 	}
 
-	if p.HookEventName == "Stop" {
-		if ctx := p.GetTranscriptContext(); ctx != nil {
-			if ctx.LastUserMessage != "" {
-				b.WriteString(fmt.Sprintf("\n<i>%s</i>", ctx.LastUserMessage))
-			}
-			if ctx.SessionDuration > 0 {
-				b.WriteString(fmt.Sprintf("\n\n⏱ %s", formatDuration(ctx.SessionDuration)))
-			}
-		}
+	// Last user message for completed tasks
+	if p.HookEventName == "Stop" && ctx != nil && ctx.LastUserMessage != "" {
+		b.WriteString(fmt.Sprintf("💬  <i>\"%s\"</i>\n\n", ctx.LastUserMessage))
 	}
+
+	// Metadata section
+	b.WriteString("┌─────────────────────\n")
+
+	// Path
+	b.WriteString(fmt.Sprintf("│ 📂  <code>%s</code>\n", p.Cwd))
+
+	// User & Host
+	if sys.Username != "" || sys.Hostname != "" {
+		b.WriteString(fmt.Sprintf("│ 👤  <code>%s@%s</code>\n", sys.Username, sys.Hostname))
+	}
+
+	// Session ID (truncated)
+	if p.SessionID != "" {
+		sid := p.SessionID
+		if len(sid) > 8 {
+			sid = sid[:8]
+		}
+		b.WriteString(fmt.Sprintf("│ 🔑  <code>%s</code>\n", sid))
+	}
+
+	// Duration
+	if ctx != nil && ctx.SessionDuration > 0 {
+		b.WriteString(fmt.Sprintf("│ ⏱   <code>%s</code>\n", formatDuration(ctx.SessionDuration)))
+	}
+
+	// Timestamp
+	b.WriteString(fmt.Sprintf("│ 🕐  <code>%s</code>\n", now.Format("15:04:05")))
+
+	b.WriteString("└─────────────────────\n")
 
 	return b.String()
 }

@@ -97,22 +97,39 @@ Add to `~/.claude/settings.json`:
 
 **Task Completed:**
 ```
-✅ Task Completed
+━━━━━━━━━━━━━━━━━━━━━━
+✅  TASK COMPLETED
+━━━━━━━━━━━━━━━━━━━━━━
 
-my-project
+📁  my-project
 
-implement user authentication
+💬  "implement user authentication"
 
-⏱ 5m 32s
+┌─────────────────────
+│ 📂  /Users/me/projects/my-project
+│ 👤  me@macbook
+│ 🔑  abc12345
+│ ⏱   5m 32s
+│ 🕐  14:32:07
+└─────────────────────
 ```
 
-**Waiting for Input:**
+**Awaiting Input:**
 ```
-⏳ Waiting for Input
+━━━━━━━━━━━━━━━━━━━━━━
+⏳  AWAITING INPUT
+━━━━━━━━━━━━━━━━━━━━━━
 
-my-project
+📁  my-project
 
-Claude needs permission to run Bash command
+💬  Claude needs permission to execute: rm -rf node_modules
+
+┌─────────────────────
+│ 📂  /Users/me/projects/my-project
+│ 👤  me@macbook
+│ 🔑  xyz98765
+│ 🕐  14:35:22
+└─────────────────────
 ```
 
 ## License
