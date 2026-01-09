@@ -14,12 +14,15 @@ type Config struct {
 }
 
 func LoadConfig() (*Config, error) {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return nil, fmt.Errorf("get home dir: %w", err)
+	path := os.Getenv("TGNOTIFY_CONFIG")
+	if path == "" {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return nil, fmt.Errorf("get home dir: %w", err)
+		}
+		path = filepath.Join(home, ".tg-notify", "config.toml")
 	}
 
-	path := filepath.Join(home, ".tg-notify", "config.toml")
 	var cfg Config
 	if _, err := toml.DecodeFile(path, &cfg); err != nil {
 		return nil, fmt.Errorf("decode config %s: %w", path, err)

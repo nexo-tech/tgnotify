@@ -62,6 +62,12 @@ bot_token = "123456789:ABCdefGHIjklMNOpqrsTUVwxyz"
 chat_id = "987654321"
 ```
 
+Or set custom config path via environment variable:
+
+```bash
+export TGNOTIFY_CONFIG=/path/to/config.toml
+```
+
 ### 4. Add Claude Code Hooks
 
 Add to `~/.claude/settings.json`:
