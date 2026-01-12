@@ -17,8 +17,40 @@ import (
 )
 
 var (
-	doneHeaders = []string{"｡✧ <b>done!</b> ✧｡", "✿ <b>finished~</b> ✿", "♪ <b>complete!</b> ♪", "☆ <b>all done!</b> ☆", "･ﾟ✧ <b>yay!</b> ✧ﾟ･", "♡ <b>done!</b> ♡"}
-	needHeaders = []string{"｡･ﾟ <b>need you~</b> ﾟ･｡", "✿ <b>waiting...</b> ✿", "♪ <b>hey~</b> ♪", "☆ <b>psst!</b> ☆", "･ﾟ✧ <b>help?</b> ✧ﾟ･", "♡ <b>um...</b> ♡"}
+	// Decorative symbol pairs [left, right]
+	decorations = [][2]string{
+		{"｡✧ ", " ✧｡"},
+		{"✿ ", " ✿"},
+		{"♪ ", " ♪"},
+		{"☆ ", " ☆"},
+		{"･ﾟ✧ ", " ✧ﾟ･"},
+		{"♡ ", " ♡"},
+		{"✧･ﾟ: ", " :･ﾟ✧"},
+		{"♬ ", " ♬"},
+		{"｡ﾟ☆ ", " ☆ﾟ｡"},
+		{"☆ﾟ.* ", " *.ﾟ☆"},
+		{"･ﾟ✿ ", " ✿ﾟ･"},
+		{"｡♪ ", " ♪｡"},
+		{"ﾟ+.* ", " *.+ﾟ"},
+		{"*:･ﾟ ", " ﾟ･:*"},
+		{"｡･:*: ", " :*:･｡"},
+	}
+
+	// Done messages - soft, gentle completion
+	doneMessages = []string{
+		"done!", "finished~", "complete!", "all done!", "yay!",
+		"okay~", "done~", "fin~", "all set~", "there~",
+		"phew~", "sorted~", "ready!", "made it~", "finally~",
+		"good~", "done done~", "okay!", "set~", "clear~",
+	}
+
+	// Need messages - soft, hesitant requests
+	needMessages = []string{
+		"need you~", "waiting...", "hey~", "psst!", "help?", "um...",
+		"hi~", "hello~", "hmm...", "here~", "hm?",
+		"pls?", "erm...", "eh?", "ano...", "ne~",
+		"look~", "hey?", "hi...", "mm?", "oh~",
+	}
 )
 
 func main() {
@@ -53,9 +85,9 @@ func main() {
 
 	switch h.Event {
 	case "Stop":
-		b.WriteString(doneHeaders[rand.Intn(len(doneHeaders))])
+		b.WriteString(randomHeader(doneMessages))
 	case "Notification":
-		b.WriteString(needHeaders[rand.Intn(len(needHeaders))])
+		b.WriteString(randomHeader(needMessages))
 	default:
 		fmt.Fprintf(&b, "✿ <b>%s</b> ✿", strings.ToLower(h.Event))
 	}
@@ -141,4 +173,10 @@ func fmtDur(d time.Duration) string {
 		return fmt.Sprintf("%dm%ds", m, (d%time.Minute)/time.Second)
 	}
 	return fmt.Sprintf("%ds", d/time.Second)
+}
+
+func randomHeader(messages []string) string {
+	d := decorations[rand.Intn(len(decorations))]
+	m := messages[rand.Intn(len(messages))]
+	return d[0] + "<b>" + m + "</b>" + d[1]
 }
