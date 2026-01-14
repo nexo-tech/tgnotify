@@ -73,6 +73,7 @@ func main() {
 		Cwd            string `json:"cwd"`
 		Event          string `json:"hook_event_name"`
 		Message        string `json:"message"`
+		ToolName       string `json:"tool_name"` // "opencode" or empty (claude code)
 	}
 	if json.NewDecoder(os.Stdin).Decode(&h) != nil {
 		return

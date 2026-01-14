@@ -1,5 +1,5 @@
 {
-  description = "🤖 Telegram notifications for Claude Code hooks";
+  description = "Telegram notifications for Claude Code and OpenCode hooks";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -18,7 +18,7 @@
           src = ./.;
           vendorHash = "sha256-pbA/AlBz3cQYRTMnQ/qBPcinYOKokrBLNhkbRTq54gE=";
           meta = with pkgs.lib; {
-            description = "Telegram notifications for Claude Code hooks";
+            description = "Telegram notifications for Claude Code and OpenCode hooks";
             homepage = "https://github.com/nexo-tech/tgnotify";
             license = licenses.mit;
             mainProgram = "tgnotify";

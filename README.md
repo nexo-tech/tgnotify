@@ -1,16 +1,17 @@
-# 🤖 tgnotify
+# tgnotify
 
-Telegram notifications for [Claude Code](https://claude.ai/code) hooks.
+Telegram notifications for [Claude Code](https://claude.ai/code) and [OpenCode](https://opencode.ai) hooks.
 
-Get instant Telegram messages when Claude finishes tasks or needs your attention.
+Get instant Telegram messages when your AI coding assistant finishes tasks or needs your attention.
 
 ## Features
 
-- 📬 Notifications on task completion
-- ⚠️ Alerts when Claude needs permission
-- 📊 Session context (last task, duration)
-- 🔧 Simple TOML configuration
-- ❄️ Nix flake for easy installation
+- Notifications on task completion
+- Alerts when assistant needs permission
+- Session context (last task, duration)
+- Simple TOML configuration
+- Nix flake for easy installation
+- Supports both Claude Code and OpenCode
 
 ## Installation
 
@@ -62,35 +63,43 @@ bot_token = "123456789:ABCdefGHIjklMNOpqrsTUVwxyz"
 chat_id = "987654321"
 ```
 
-### 4. Add Claude Code Hooks
+### 4. Add Hooks
+
+#### Claude Code
 
 Add to `~/.claude/settings.json`:
 
 ```json
 {
   "hooks": {
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "tgnotify"
-          }
-        ]
-      }
-    ],
-    "Notification": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "tgnotify"
-          }
-        ]
-      }
-    ]
+    "Stop": [{ "hooks": [{ "type": "command", "command": "tgnotify" }] }],
+    "Notification": [{ "hooks": [{ "type": "command", "command": "tgnotify" }] }]
   }
 }
+```
+
+#### OpenCode
+
+Create `~/.config/opencode/plugin/tgnotify.ts`:
+
+```typescript
+import { execSync } from "child_process";
+
+export const TgNotifyPlugin = async ({ project }) => ({
+  event: async ({ event }) => {
+    if (event.type === "session.idle" || event.type === "session.error") {
+      const payload = JSON.stringify({
+        hook_event_name: event.type === "session.idle" ? "Stop" : "Notification",
+        cwd: project.path,
+        message: event.type === "session.error" ? "Session error" : "",
+        tool_name: "opencode"
+      });
+      try {
+        execSync("tgnotify", { input: payload, stdio: ["pipe", "inherit", "inherit"] });
+      } catch {}
+    }
+  }
+});
 ```
 
 ## Notification Examples
